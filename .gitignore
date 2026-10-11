@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+*.db
+*.db-shm
+*.db-wal
+appsettings.Development.json
+secrets.json
+
+# Secrets / keys (bank provider private keys etc.)
+*.pem
+*.key
+.env
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+web/lynx-web/.angular/
+npm-debug.log*
+
+# IDE / OS
+.idea/
+.vscode/*
+!.vscode/extensions.json
+Thumbs.db
