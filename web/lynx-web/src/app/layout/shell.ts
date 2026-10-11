@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../core/auth.service';
 
 @Component({
   selector: 'lynx-shell',
@@ -13,7 +14,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
         }
       </nav>
-      <div class="user muted">Signed in as you · <a href="#">Log out</a></div>
+      <div class="user muted">{{ auth.email() }} · <a href="#" (click)="logout($event)">Log out</a></div>
     </aside>
     <main>
       <span class="mock-banner">UI mock-up — all data is fake</span>
@@ -40,6 +41,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   `,
 })
 export class Shell {
+  protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  protected async logout(event: Event) {
+    event.preventDefault();
+    await this.auth.logout();
+    await this.router.navigateByUrl('/login');
+  }
+
   protected readonly nav = [
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/accounts', label: 'Accounts' },
