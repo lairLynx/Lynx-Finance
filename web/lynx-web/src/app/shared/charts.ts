@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { I18n } from '../core/i18n.service';
 
 /** Simple inline-SVG line/area chart. */
 @Component({
@@ -53,10 +54,10 @@ export class LineChart {
       @for (d of data(); track d.month) {
         <div class="group">
           <div class="pair">
-            <div class="bar income" [style.height.%]="(d.income / max()) * 100" [title]="'Income ' + d.income"></div>
-            <div class="bar expense" [style.height.%]="(d.expense / max()) * 100" [title]="'Expense ' + d.expense"></div>
+            <div class="bar income" [style.height.%]="(d.income / max()) * 100" [title]="i18n.t('Income') + ' ' + d.income"></div>
+            <div class="bar expense" [style.height.%]="(d.expense / max()) * 100" [title]="i18n.t('Expenses') + ' ' + d.expense"></div>
           </div>
-          <span class="label">{{ d.month }}</span>
+          <span class="label">{{ i18n.t(d.month) }}</span>
         </div>
       }
     </div>
@@ -72,6 +73,7 @@ export class LineChart {
   `,
 })
 export class BarChart {
+  protected readonly i18n = inject(I18n);
   readonly data = input.required<{ month: string; income: number; expense: number }[]>();
   protected readonly max = computed(() => Math.max(...this.data().flatMap((d) => [d.income, d.expense])));
 }

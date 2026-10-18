@@ -1,23 +1,32 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import { I18n } from '../core/i18n.service';
+import { ThemeService } from '../core/theme.service';
+import { LangSwitch } from '../shared/lang-switch';
 
 @Component({
   selector: 'lynx-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LangSwitch],
   template: `
     <aside>
       <div class="brand"><span class="logo" aria-hidden="true"></span>Lynx</div>
       <nav>
         @for (item of nav; track item.path) {
-          <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
+          <a [routerLink]="item.path" routerLinkActive="active">{{ i18n.t(item.label) }}</a>
         }
       </nav>
-      <div class="user muted">{{ auth.email() }} · <a href="#" (click)="logout($event)">Log out</a></div>
+      <div class="user muted">{{ auth.email() }} · <a href="#" (click)="logout($event)">{{ i18n.t('Log out') }}</a></div>
     </aside>
     <main>
-      <span class="mock-banner">UI mock-up — all data is fake</span>
+      <div class="topbar">
+        <lynx-lang-switch />
+        <button class="theme-switch" type="button" role="switch" [attr.aria-checked]="theme.theme() === 'dark'" [attr.aria-label]="i18n.t('Dark mode')" (click)="theme.toggle()">
+          <span class="label">{{ i18n.t(theme.theme() === 'dark' ? 'Dark' : 'Light') }}</span>
+          <span class="track"><span class="thumb"></span></span>
+        </button>
+      </div>
       <router-outlet />
     </main>
   `,
@@ -31,7 +40,13 @@ import { AuthService } from '../core/auth.service';
     nav a:hover { background: var(--surface-2); }
     nav a.active { background: var(--primary-soft); color: var(--primary); }
     .user { font-size: 0.8rem; padding: 0 10px; }
-    main { flex: 1; padding: 28px 34px; min-width: 0; max-width: 1200px; }
+    .topbar { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .theme-switch { display: flex; align-items: center; gap: 10px; background: none; border: none; color: var(--muted); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 4px; }
+    .track { width: 38px; height: 22px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); position: relative; transition: background 0.15s; }
+    .thumb { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform 0.15s, background 0.15s; }
+    .theme-switch[aria-checked='true'] .track { background: var(--primary-soft); }
+    .theme-switch[aria-checked='true'] .thumb { transform: translateX(16px); background: var(--primary); }
+    main { flex: 1; padding: 28px 34px; min-width: 0; }
     @media (max-width: 800px) {
       :host { flex-direction: column; }
       aside { width: 100%; height: auto; position: static; }
@@ -42,6 +57,8 @@ import { AuthService } from '../core/auth.service';
 })
 export class Shell {
   protected readonly auth = inject(AuthService);
+  protected readonly theme = inject(ThemeService);
+  protected readonly i18n = inject(I18n);
   private readonly router = inject(Router);
 
   protected async logout(event: Event) {

@@ -2,36 +2,40 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, errorMessage } from '../core/auth.service';
+import { I18n } from '../core/i18n.service';
+import { LangSwitch } from '../shared/lang-switch';
 
 @Component({
   selector: 'lynx-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, LangSwitch],
   template: `
+    <lynx-lang-switch class="lang" />
     <form class="card" (ngSubmit)="submit()">
       <div class="brand"><span class="logo" aria-hidden="true"></span>Lynx</div>
       @if (setupRequired()) {
-        <h1>Create your account</h1>
-        <p class="sub">First run: choose the email and password you'll use to sign in. At least 12 characters; a passphrase works well.</p>
+        <h1>{{ i18n.t('Create your account') }}</h1>
+        <p class="sub">{{ i18n.t("First run: choose the email and password you'll use to sign in. At least 12 characters; a passphrase works well.") }}</p>
       } @else {
-        <h1>Sign in</h1>
-        <p class="sub">Welcome back.</p>
+        <h1>{{ i18n.t('Sign in') }}</h1>
+        <p class="sub">{{ i18n.t('Welcome back.') }}</p>
       }
 
-      <label>Email<input type="email" name="email" [(ngModel)]="email" autocomplete="username" required /></label>
-      <label>Password
+      <label>{{ i18n.t('Email') }}<input type="email" name="email" [(ngModel)]="email" autocomplete="username" required /></label>
+      <label>{{ i18n.t('Password') }}
         <input type="password" name="password" [(ngModel)]="password" [autocomplete]="setupRequired() ? 'new-password' : 'current-password'" required minlength="12" />
       </label>
       @if (setupRequired()) {
-        <label>Confirm password<input type="password" name="confirm" [(ngModel)]="confirm" autocomplete="new-password" required /></label>
+        <label>{{ i18n.t('Confirm password') }}<input type="password" name="confirm" [(ngModel)]="confirm" autocomplete="new-password" required /></label>
       }
 
-      @if (error()) { <div class="error">{{ error() }}</div> }
-      <button class="btn primary" type="submit" [disabled]="busy()">{{ setupRequired() ? 'Create account' : 'Sign in' }}</button>
+      @if (error()) { <div class="error">{{ i18n.t(error()) }}</div> }
+      <button class="btn primary" type="submit" [disabled]="busy()">{{ i18n.t(setupRequired() ? 'Create account' : 'Sign in') }}</button>
     </form>
   `,
   styles: `
-    :host { display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+    .lang { position: absolute; top: 20px; right: 24px; }
+    :host { position: relative; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
     form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; }
     .brand { font-size: 1.35rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
     .logo { width: 34px; height: 34px; background: var(--text); -webkit-mask: url(/lynx-logo.png) center / contain no-repeat; mask: url(/lynx-logo.png) center / contain no-repeat; }
@@ -42,6 +46,7 @@ import { AuthService, errorMessage } from '../core/auth.service';
   `,
 })
 export class Login implements OnInit {
+  protected readonly i18n = inject(I18n);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
