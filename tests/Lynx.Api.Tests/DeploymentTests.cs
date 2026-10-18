@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Lynx.Api.Tests;
 
@@ -29,6 +30,32 @@ public class DeploymentTests : IClassFixture<ApiFactory>
         Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
         Assert.Equal("DENY", response.Headers.GetValues("X-Frame-Options").Single());
         Assert.Equal("no-referrer", response.Headers.GetValues("Referrer-Policy").Single());
+    }
+
+    [Fact]
+    public async Task Static_files_are_served_and_only_extensionless_routes_fall_back_to_the_spa()
+    {
+        // Regression: a catch-all fallback once answered every request, including main-*.js, with index.html (blank page).
+        var webRoot = Directory.CreateTempSubdirectory("lynx-wwwroot-").FullName;
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(webRoot, "index.html"), "<html>spa-shell</html>");
+            await File.WriteAllTextAsync(Path.Combine(webRoot, "main-ABC123.js"), "console.log('bundle');");
+            var client = _factory.WithWebHostBuilder(b => b.UseWebRoot(webRoot)).CreateClient();
+
+            var js = await client.GetAsync("/main-ABC123.js");
+            Assert.Equal(HttpStatusCode.OK, js.StatusCode);
+            Assert.Contains("javascript", js.Content.Headers.ContentType!.MediaType);
+            Assert.Equal("console.log('bundle');", await js.Content.ReadAsStringAsync());
+
+            Assert.Contains("spa-shell", await client.GetStringAsync("/"));
+            Assert.Contains("spa-shell", await client.GetStringAsync("/dashboard"));           // client-side route
+            Assert.Contains("spa-shell", await client.GetStringAsync("/transactions"));
+
+            Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/missing-file.js")).StatusCode); // not index.html
+            Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/does-not-exist")).StatusCode);
+        }
+        finally { Directory.Delete(webRoot, recursive: true); }
     }
 
     [Fact]

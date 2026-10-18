@@ -81,7 +81,9 @@ api.MapGoalEndpoints();
 api.MapRecurringEndpoints();
 
 // In production the Angular build is served from wwwroot; unknown non-API routes fall back to the SPA.
-app.MapFallbackToFile("{*path:regex(^(?!api/).*$)}", "index.html", staticFiles);
+// The pattern must not match paths with a dot: the static-file middleware skips any request an endpoint has matched,
+// so a catch-all fallback would swallow main-*.js and friends and answer every file request with index.html.
+app.MapFallbackToFile("{*path:regex(^(?!api(/|$))[^.]*$)}", "index.html", staticFiles);
 
 app.Run();
 

@@ -47,9 +47,6 @@ Step "Creating $Root"
 foreach ($d in 'releases', 'data', 'backups', 'logs', 'downloads') { New-Item -ItemType Directory -Path (Join-Path $Root $d) -Force | Out-Null }
 
 $account = "NT SERVICE\$ServiceName"
-# Only SYSTEM, administrators and the service itself may touch the app; the database is not world-readable.
-& icacls $Root /inheritance:r /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' "${account}:(OI)(CI)RX" | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'icacls failed (root).' }
 
 @{
     Repo         = $Repo
@@ -85,10 +82,17 @@ else {
 & sc.exe failure $ServiceName reset= 86400 actions= restart/5000/restart/30000/restart/60000 | Out-Null
 & sc.exe failureflag $ServiceName 1 | Out-Null
 
+# Permissions come after the service exists: the virtual account "NT SERVICE\<name>" cannot be resolved before that.
+# Only SYSTEM, administrators and the service itself may touch the app; the database is not world-readable.
+Step 'Setting folder permissions'
+# Use the service SID rather than the name: it is available the moment the service is registered.
+$sidLine = (& sc.exe showsid $ServiceName) | Where-Object { $_ -match 'SERVICE SID:\s*(S-1-5-80-[\d-]+)' } | Select-Object -First 1
+$grantee = if ($sidLine -match '(S-1-5-80-[\d-]+)') { "*$($Matches[1])" } else { $account }
+& icacls $Root /inheritance:r /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' "${grantee}:(OI)(CI)RX" | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "icacls failed on $Root (grantee $grantee; is the service registered?)." }
 # The service account needs to write the database and key ring, nothing else.
-& icacls $dataDir /grant "${account}:(OI)(CI)M" | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'icacls failed (data).' }
-& icacls $dataDir /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' | Out-Null
+& icacls $dataDir /grant "${grantee}:(OI)(CI)M" | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "icacls failed on $dataDir." }
 
 $secureCookies = if ($ServeMode -eq 'Https') { 'true' } else { 'false' }
 $environment = @(
