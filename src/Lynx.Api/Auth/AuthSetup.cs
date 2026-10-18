@@ -10,7 +10,8 @@ public static class AuthSetup
     public const string LoginRateLimit = "login";
     public const string CsrfHeader = "X-Lynx-Request";
 
-    public static IServiceCollection AddLynxAuth(this IServiceCollection services)
+    /// <param name="secureCookies">Mark the login cookie Secure. Turn on whenever users reach the app over HTTPS (e.g. Tailscale Serve).</param>
+    public static IServiceCollection AddLynxAuth(this IServiceCollection services, bool secureCookies = false)
     {
         services.AddAuthentication(IdentityConstants.ApplicationScheme).AddIdentityCookies();
         services.AddAuthorization();
@@ -34,7 +35,7 @@ public static class AuthSetup
             options.Cookie.Name = "lynx.auth";
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Strict;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.Cookie.SecurePolicy = secureCookies ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             options.ExpireTimeSpan = TimeSpan.FromDays(14);
             options.SlidingExpiration = true;
             // The SPA handles navigation; the API only ever answers with status codes.

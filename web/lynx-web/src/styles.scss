@@ -100,3 +100,20 @@ button.btn:hover { filter: brightness(1.05); }
 
 .row { display: flex; align-items: center; gap: 12px; }
 .row.between { justify-content: space-between; }
+
+input.input, select.input, textarea.input {
+  padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font: inherit; min-width: 0;
+}
+input.input:focus, select.input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+select.input { padding-right: 8px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 12px 0; }
+.form-grid label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.85rem; }
+.form-grid label input, .form-grid label select { font-weight: 400; }
+.notice { margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; border: 1px solid var(--border); background: var(--surface-2); }
+.notice.good { border-color: var(--good); }
+.notice.bad { border-color: var(--bad); }
+button.btn.link { border: none; background: none; padding: 4px 8px; color: var(--muted); }
+button.btn.link:hover { color: var(--bad); }
+button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.empty { text-align: center; padding: 28px 12px; color: var(--muted); }

@@ -26,3 +26,8 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 Thumbs.db
+
+# Angular build copied in by the release workflow
+src/Lynx.Api/wwwroot/
+# Local release output
+/artifacts/

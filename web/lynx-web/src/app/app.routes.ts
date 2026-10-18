@@ -13,6 +13,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard').then((m) => m.Dashboard) },
       { path: 'accounts', loadComponent: () => import('./pages/accounts').then((m) => m.Accounts) },
       { path: 'transactions', loadComponent: () => import('./pages/transactions').then((m) => m.Transactions) },
+      { path: 'categories', loadComponent: () => import('./pages/categories').then((m) => m.Categories) },
       { path: 'budgets', loadComponent: () => import('./pages/budgets').then((m) => m.Budgets) },
       { path: 'goals', loadComponent: () => import('./pages/goals').then((m) => m.Goals) },
       { path: 'forecast', loadComponent: () => import('./pages/forecast').then((m) => m.Forecast) },

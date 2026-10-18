@@ -71,6 +71,7 @@ export class Shell {
     { path: '/dashboard', label: 'Dashboard' },
     { path: '/accounts', label: 'Accounts' },
     { path: '/transactions', label: 'Transactions' },
+    { path: '/categories', label: 'Categories' },
     { path: '/budgets', label: 'Budgets' },
     { path: '/goals', label: 'Goals' },
     { path: '/forecast', label: 'Recurring & Forecast' },

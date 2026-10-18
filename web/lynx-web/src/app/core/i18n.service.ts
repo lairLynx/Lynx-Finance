@@ -37,7 +37,24 @@ export class I18n {
   }
 
   money(value: number, currency = 'EUR'): string {
-    return new Intl.NumberFormat(LOCALES[this.lang()], { style: 'currency', currency }).format(value);
+    const code = currency === 'LEI' ? 'RON' : currency; // Romanian statements label the leu "LEI"
+    return new Intl.NumberFormat(LOCALES[this.lang()], { style: 'currency', currency: code }).format(value);
+  }
+
+  percent(ratio: number): string {
+    return new Intl.NumberFormat(LOCALES[this.lang()], { style: 'percent', maximumFractionDigits: 1 }).format(ratio);
+  }
+
+  /** "2026-09" as "Sep" (or "Sep 26" when `withYear`) in the active locale. */
+  monthShort(label: string, withYear = false): string {
+    const [y, m] = label.split('-').map(Number);
+    return new Intl.DateTimeFormat(LOCALES[this.lang()], withYear ? { month: 'short', year: '2-digit' } : { month: 'short' }).format(new Date(y, m - 1, 1));
+  }
+
+  /** "2026-09" as "September 2026" in the active locale. */
+  monthLong(label: string): string {
+    const [y, m] = label.split('-').map(Number);
+    return this.monthYear(y, m - 1);
   }
 
   /** ISO date (yyyy-mm-dd) in the active locale. */

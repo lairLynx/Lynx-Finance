@@ -1,0 +1,48 @@
+name: Release (prod)
+
+# Pushing to the `prod` branch builds, tests and publishes a release. The Windows host polls for new releases
+# (deploy/Update-Lynx.ps1), so nothing here reaches into the private network and no self-hosted runner is needed.
+# Anything pushed to `prod` ends up running on the host: protect the branch (see deploy/README.md).
+on:
+  push:
+    branches: [prod]
+
+permissions:
+  contents: write # create the release
+
+concurrency:
+  group: prod-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Build and test the release package
+        shell: pwsh
+        run: ./deploy/Build-Release.ps1 -Version "${{ github.sha }}"
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $short = "${{ github.sha }}".Substring(0, 7)
+          $tag = "prod-${{ github.run_number }}-$short"
+          gh release create $tag "artifacts/lynx-$short.zip" "artifacts/lynx-$short.zip.sha256" `
+            --target "${{ github.sha }}" --title "Prod $tag" --notes "Commit ${{ github.sha }}" --latest
+          if ($LASTEXITCODE -ne 0) { throw "gh release create failed" }
+
+          # Keep the 10 newest releases; older ones are only useful for rollback and the host keeps its own copies.
+          $old = gh release list --limit 100 --json tagName --jq '.[10:] | .[].tagName'
+          foreach ($t in $old) { gh release delete $t --cleanup-tag --yes }
